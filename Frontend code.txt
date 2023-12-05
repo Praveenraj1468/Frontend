@@ -1,0 +1,68 @@
+App.js                                                    import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+
+function App() {
+  const [orders, setOrders] = useState([]);
+  const [newOrder, setNewOrder] = useState({ orderId: '', customerName: '', product: '' });
+
+  useEffect(() => {
+    axios.get('http://localhost:3001/orders')
+      .then(res => {
+        setOrders(res.data);
+      })
+      .catch(err => {
+        console.error(err);
+      });
+  }, []);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewOrder({ ...newOrder, [name]: value });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    axios.post('http://localhost:3001/orders', newOrder)
+      .then(res => {
+        console.log(res.data);
+        // Fetch updated orders after adding a new order
+        axios.get('http://localhost:3001/orders')
+          .then(res => {
+            setOrders(res.data);
+            setNewOrder({ orderId: '', customerName: '', product: '' });
+          })
+          .catch(err => {
+            console.error(err);
+          });
+  })
+      .catch(err => {
+        console.error(err);
+      });
+  };
+
+  return (
+    <div className="App">
+      <h1>Order Management System</h1>
+      <form onSubmit={handleSubmit}>
+        <input type="text" name="orderId" placeholder="Order ID" value={newOrder.orderId} onChange={handleInputChange} required />
+        <input type="text" name="customerName" placeholder="Customer Name" value={newOrder.customerName} onChange={handleInputChange} required />
+        <input type="text" name="product" placeholder="Product" value={newOrder.product} onChange={handleInputChange} required />
+        <button type="submit">Add Order</button>
+      </form>
+      <div>
+        <h2>Orders</h2>
+        <ul>
+          {orders.map(order => (
+            <li key={order._id}>
+              <p>Order ID: {order.orderId}</p>
+              <p>Customer Name: {order.customerName}</p>
+              <p>Product: {order.product}</p>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+export default App;
